@@ -32,13 +32,14 @@ module.exports.transaction = async (req, res) => {
     console.log(req.body)
     try {
         const user = await User.findOne({ cardID })
+        
+        const num = parseInt(amount)
+        if(user.accountbalance == 0) throw Error('Insufficient fund')
         await Transaction.create({
             amount,
             transaction,
             userId: user._id,
         })
-        const num = parseInt(amount)
-        if(user.accountbalance == 0) throw Error('Insufficient fund')
         const balance = user.accountbalance - num  
         await User.updateOne({ cardID }, { accountbalance: balance })
         res.status(200).send('ok')
