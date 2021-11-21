@@ -1,4 +1,5 @@
 const Transaction = require("../models/transactionModel")
+const { countDocuments } = require("../models/userModel")
 const User = require("../models/userModel")
 
 module.exports.savetransaction = async (req, res) => {
@@ -24,4 +25,26 @@ module.exports.transaction = async (req, res) => {
     } catch (error) {
         res.send('Could not get list of transactions')
     }
+ }
+
+ module.exports.charge = async (req, res) => {
+    const { cardID, amount, transaction } =  req.body
+    console.log(req.body)
+    try {
+        const user = await User.findOne({ cardID })
+        await Transaction.create({
+            amount,
+            transaction,
+            userId: user._id,
+        })
+        const num = parseInt(amount)
+        if(user.accountbalance == 0) throw Error('Insufficient fund')
+        const balance = user.accountbalance - num  
+        await User.updateOne({ cardID }, { accountbalance: balance })
+        res.status(200).send('ok')
+   } catch (error) {
+       console.log(error.message)
+       res.status(400).send(error.message)
+   }
+ 
  }
